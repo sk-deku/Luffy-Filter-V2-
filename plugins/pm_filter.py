@@ -96,13 +96,15 @@ async def set_filter(client, callback_query):
         await callback_query.message.edit_text("🌍 **Select a Language:**", reply_markup=get_language_buttons())
     elif data == "filter_quality":
         await callback_query.message.edit_text("🎥 **Select a Quality:**", reply_markup=get_quality_buttons())
-    elif data == "clear_filters":
-        global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality
-        user_selected_season = None
-        user_selected_episode = None
-        user_selected_language = None
-        user_selected_quality = None
-        await callback_query.message.edit_text("✅ Filters cleared!", reply_markup=get_filter_buttons())
+
+@app.on_callback_query(filters.regex(r"^clear_filters$"))
+async def clear_filters(client, callback_query):
+    user_id = callback_query.from_user.id
+    if user_id in USER_FILTERS:
+        USER_FILTERS[user_id] = {"season": None, "episode": None, "language": None, "quality": None}
+    
+    await callback_query.answer("Filters cleared!", show_alert=True)
+    await callback_query.message.edit_text("✅ Filters cleared!", reply_markup=get_filter_buttons())
 
 
 #-------------------remaining codes down on this----------
