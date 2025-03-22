@@ -809,18 +809,16 @@ async def auto_filter(client, msg, spoll=False):
         except Exception as e:
             logger.exception(e)
             buttons = get_filter_buttons()  # Get filtering buttons
-btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
+            btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
 #           await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
     else:
         buttons = get_filter_buttons()  # Get filtering buttons
-btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
-
+        btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
+# Send the message with filtering buttons on top
+        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(buttons.inline_keyboard + btn))
 #-----811-----------------------------------------------------------------------------------------------------------
 #        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 #----------------------------------------------------------------------------------------------------------------
-
-# Send the message with filtering buttons on top
-await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(buttons.inline_keyboard + btn))
 
     if spoll:
         await msg.message.delete()
