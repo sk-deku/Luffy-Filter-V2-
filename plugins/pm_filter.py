@@ -628,6 +628,28 @@ def get_filter_buttons():
     ]
     return InlineKeyboardMarkup(buttons)
 
+def get_season_buttons():
+    buttons = [[InlineKeyboardButton(f"S{str(i).zfill(2)}", callback_data=f"set_season_S{str(i).zfill(2)}")] for i in range(1, 21)]
+    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
+    return InlineKeyboardMarkup(buttons)
+
+def get_episode_buttons():
+    buttons = [[InlineKeyboardButton(f"EP{str(i).zfill(2)}", callback_data=f"set_episode_EP{str(i).zfill(2)}")] for i in range(1, 26)]
+    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
+    return InlineKeyboardMarkup(buttons)
+
+def get_language_buttons():
+    languages = ["Tamil", "English", "Japanese", "Hindi", "Malayalam", "Kannada", "Telugu", "EngSub", "Multi"]
+    buttons = [[InlineKeyboardButton(lang, callback_data=f"set_language_{lang}")] for lang in languages]
+    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
+    return InlineKeyboardMarkup(buttons)
+
+def get_quality_buttons():
+    qualities = ["480p", "720p", "1080p", "2K", "4K"]
+    buttons = [[InlineKeyboardButton(quality, callback_data=f"set_quality_{quality}")] for quality in qualities]
+    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
+    return InlineKeyboardMarkup(buttons)
+
 @app.on_callback_query(filters.regex(r"^set_(season|episode|language|quality)_(.+)"))
 async def set_filter(client, callback_query):
     user_id = callback_query.from_user.id
@@ -638,7 +660,7 @@ async def set_filter(client, callback_query):
     
     USER_FILTERS[user_id][filter_type] = value
 
-    await callback_query.answer(f"Selected {filter_type.capitalize()}: {value}", show_alert=True)
+    await callback_query.answer(f"Selected {filter_type.upper()}: {value}", show_alert=True)
     await callback_query.message.edit_text("✅ Filter updated!", reply_markup=get_filter_buttons())
 
 @app.on_callback_query(filters.regex(r"^filter_(season|episode|language|quality)$"))
@@ -683,9 +705,9 @@ async def auto_filter(client, msg, spoll=False):
 
             if files:
                 if selected_season:
-                    files = [f for f in files if f.file_name.lower().find(f"season {selected_season}") != -1]
+                    files = [f for f in files if f.file_name.lower().find(selected_season.lower()) != -1]
                 if selected_episode:
-                    files = [f for f in files if f.file_name.lower().find(f"episode {selected_episode}") != -1]
+                    files = [f for f in files if f.file_name.lower().find(selected_episode.lower()) != -1]
                 if selected_language:
                     files = [f for f in files if f.file_name.lower().find(selected_language.lower()) != -1]
                 if selected_quality:
