@@ -28,7 +28,7 @@ logger.setLevel(logging.ERROR)
 
 BUTTONS = {}
 SPELL_CHECK = {}
-
+USER_FILTERS = {}  
 
 #---------------------code up on this------------------
 
@@ -74,9 +74,19 @@ def get_quality_buttons():
     buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
     return InlineKeyboardMarkup(buttons)
 
-@app.on_callback_query(filters.regex(r"^filter_(season|episode|language|quality)$"))
-async def filter_callback(client, callback_query):
-    data = callback_query.data
+@app.on_callback_query(filters.regex(r"^set_(season|episode|language|quality)_(.+)"))
+async def set_filter(client, callback_query):
+    user_id = callback_query.from_user.id
+    filter_type, value = callback_query.data.split("_")[1], callback_query.data.split("_")[2]
+
+    # Store user selection
+    if user_id not in USER_FILTERS:
+        USER_FILTERS[user_id] = {"season": None, "episode": None, "language": None, "quality": None}
+    
+    USER_FILTERS[user_id][filter_type] = value  # Save the selected filter
+
+    await callback_query.answer(f"Selected {filter_type.capitalize()}: {value}", show_alert=True)
+    await callback_query.message.edit_text("✅ Filter updated!", reply_markup=get_filter_buttons())
 
     if data == "filter_season":
         await callback_query.message.edit_text("📺 **Select a Season:**", reply_markup=get_season_buttons())
@@ -684,8 +694,16 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.edit_reply_markup(reply_markup)
     await query.answer('Piracy Is Crime')
 
-
 async def auto_filter(client, msg, spoll=False):
+    user_id = msg.from_user.id if msg.from_user else 0  # Get user ID
+
+    # Fetch user-selected filters
+    user_filters = USER_FILTERS.get(user_id, {})
+    selected_season = user_filters.get("season")
+    selected_episode = user_filters.get("episode")
+    selected_language = user_filters.get("language")
+    selected_quality = user_filters.get("quality")
+
     if not spoll:
         message = msg
         settings = await get_settings(message.chat.id)
@@ -695,6 +713,18 @@ async def auto_filter(client, msg, spoll=False):
         if 2 < len(message.text) < 100:
             search = message.text
             files, offset, total_results = await get_search_results(search.lower(), offset=0)
+
+            # Apply user-selected filters
+            if files:
+                if selected_season:
+                    files = [f for f in files if f.file_name.lower().find(f"season {selected_season}") != -1]
+                if selected_episode:
+                    files = [f for f in files if f.file_name.lower().find(f"episode {selected_episode}") != -1]
+                if selected_language:
+                    files = [f for f in files if f.file_name.lower().find(selected_language.lower()) != -1]
+                if selected_quality:
+                    files = [f for f in files if f.file_name.lower().find(selected_quality.lower()) != -1]
+
             if not files:
                 if settings["spell_check"]:
                     return await advantage_spell_chok(msg)
@@ -706,6 +736,7 @@ async def auto_filter(client, msg, spoll=False):
         settings = await get_settings(msg.message.chat.id)
         message = msg.message.reply_to_message  # msg will be callback query
         search, files, offset, total_results = spoll
+
     pre = 'filep' if settings['file_secure'] else 'file'
     if settings["button"]:
         btn = [
