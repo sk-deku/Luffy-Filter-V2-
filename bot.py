@@ -15,11 +15,9 @@ from info import SESSION, API_ID, API_HASH, BOT_TOKEN, LOG_STR
 from utils import temp
 from typing import Union, Optional, AsyncGenerator
 from pyrogram import types
-
 from flask import Flask
 import threading
 
-#----------------------------------------------------------------
 app = Flask(__name__)
 
 @app.route('/')
@@ -31,8 +29,6 @@ def run_flask():
 
 # Start the Flask server in a separate thread
 threading.Thread(target=run_flask, daemon=True).start()
-
-#----------------------------------------------------------------
 
 class Bot(Client):
 
