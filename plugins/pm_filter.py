@@ -48,20 +48,6 @@ def get_filter_buttons():
     ]
     return InlineKeyboardMarkup(buttons)
 
-@app.on_callback_query(filters.regex(r"^filter_(season|episode|language|quality)$"))
-async def filter_callback(client, callback_query):  # ✅ Function is now async
-    data = callback_query.data
-
-    if data == "filter_season":
-        await callback_query.message.edit_reply_markup(reply_markup=get_season_buttons())  # ✅ Now inside async function
-    elif data == "filter_episode":
-        await callback_query.message.edit_reply_markup(reply_markup=get_episode_buttons())
-    elif data == "filter_language":
-        await callback_query.message.edit_reply_markup(reply_markup=get_language_buttons())
-    elif data == "filter_quality":
-        await callback_query.message.edit_reply_markup(reply_markup=get_quality_buttons())
-
-
 # Function to generate season buttons
 def get_season_buttons():
     buttons = [[InlineKeyboardButton(f"Season {i}", callback_data=f"set_season_{i}")] for i in range(1, 21)]
