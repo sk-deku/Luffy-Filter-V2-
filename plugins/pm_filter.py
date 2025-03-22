@@ -808,17 +808,15 @@ async def auto_filter(client, msg, spoll=False):
             await message.reply_photo(photo=poster, caption=cap[:1024], reply_markup=InlineKeyboardMarkup(btn))
         except Exception as e:
             logger.exception(e)
-#----------------------------------------------------------------------------------------------------------------
             buttons = get_filter_buttons()  # Get filtering buttons
 btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
-#---------------------------------------
- #           await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+#           await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
     else:
-#---------------------------------------
-#        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
         buttons = get_filter_buttons()  # Get filtering buttons
 btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
 
+#-----811-----------------------------------------------------------------------------------------------------------
+#        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 #----------------------------------------------------------------------------------------------------------------
 
 # Send the message with filtering buttons on top
