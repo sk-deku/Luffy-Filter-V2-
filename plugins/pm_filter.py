@@ -125,21 +125,22 @@ def get_quality_buttons():
 # Handle selection of filters
 @app.on_callback_query(filters.group | filters.private)
 async def filter_selection(client, callback_query):
-    global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality
-
     data = callback_query.data
+
+    global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality  # ✅ Declare global variables before using them
+
     if data.startswith("set_season_"):
-        user_selected_season = int(data.split("_")[2])
+        user_selected_season = int(data.split("_")[2])  # ✅ Now it works correctly
         await callback_query.message.edit_text(f"✅ Selected Season: {user_selected_season}", reply_markup=get_filter_buttons())
     elif data.startswith("episode_"):
         user_selected_episode = int(data.split("_")[1])
-        await callback_query.message.edit_text(f"Selected Episode: {user_selected_episode}", reply_markup=get_filter_buttons())
+        await callback_query.message.edit_text(f"✅ Selected Episode: {user_selected_episode}", reply_markup=get_filter_buttons())
     elif data.startswith("language_"):
         user_selected_language = data.split("_")[1]
-        await callback_query.message.edit_text(f"Selected Language: {user_selected_language}", reply_markup=get_filter_buttons())
+        await callback_query.message.edit_text(f"✅ Selected Language: {user_selected_language}", reply_markup=get_filter_buttons())
     elif data.startswith("quality_"):
         user_selected_quality = data.split("_")[1]
-        await callback_query.message.edit_text(f"Selected Quality: {user_selected_quality}", reply_markup=get_filter_buttons())
+        await callback_query.message.edit_text(f"✅ Selected Quality: {user_selected_quality}", reply_markup=get_filter_buttons())
 
 #-------------------remaining codes down on this----------
 
