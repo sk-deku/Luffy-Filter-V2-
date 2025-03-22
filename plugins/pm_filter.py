@@ -53,14 +53,14 @@ def get_filter_buttons():
 async def filter_callback(client, callback_query):
     data = callback_query.data
 
-    if data == "filter_season":
-        await callback_query.message.edit_text("Select a Season:", reply_markup=get_season_buttons())
+        if data == "filter_season":
+        await callback_query.message.edit_reply_markup(reply_markup=get_season_buttons())
     elif data == "filter_episode":
-        await callback_query.message.edit_text("Select an Episode:", reply_markup=get_episode_buttons())
+        await callback_query.message.edit_reply_markup(reply_markup=get_episode_buttons())
     elif data == "filter_language":
-        await callback_query.message.edit_text("Select a Language:", reply_markup=get_language_buttons())
+        await callback_query.message.edit_reply_markup(reply_markup=get_language_buttons())
     elif data == "filter_quality":
-        await callback_query.message.edit_text("Select a Quality:", reply_markup=get_quality_buttons())
+        await callback_query.message.edit_reply_markup(reply_markup=get_quality_buttons())
     elif data == "clear_filters":
         global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality
         user_selected_season = None
