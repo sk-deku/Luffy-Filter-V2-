@@ -101,9 +101,9 @@ async def filter_selection(client, callback_query):
     global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality
 
     data = callback_query.data
-    if data.startswith("season_"):
-        user_selected_season = int(data.split("_")[1])
-        await callback_query.message.edit_text(f"Selected Season: {user_selected_season}", reply_markup=get_filter_buttons())
+    if data.startswith("set_season_"):
+        user_selected_season = int(data.split("_")[2])
+        await callback_query.message.edit_text(f"✅ Selected Season: {user_selected_season}", reply_markup=get_filter_buttons())
     elif data.startswith("episode_"):
         user_selected_episode = int(data.split("_")[1])
         await callback_query.message.edit_text(f"Selected Episode: {user_selected_episode}", reply_markup=get_filter_buttons())
