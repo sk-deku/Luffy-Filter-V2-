@@ -53,7 +53,7 @@ def get_filter_buttons():
 async def filter_callback(client, callback_query):
     data = callback_query.data
 
-        if data == "filter_season":
+    if data == "filter_season":
         await callback_query.message.edit_reply_markup(reply_markup=get_season_buttons())
     elif data == "filter_episode":
         await callback_query.message.edit_reply_markup(reply_markup=get_episode_buttons())
