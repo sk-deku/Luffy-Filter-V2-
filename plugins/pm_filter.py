@@ -74,21 +74,21 @@ def get_season_buttons():
 
 # Function to generate episode buttons
 def get_episode_buttons():
-    buttons = [[InlineKeyboardButton(f"Episode {i}", callback_data=f"episode_{i}")] for i in range(1, 26)]
+    buttons = [[InlineKeyboardButton(f"Episode {i}", callback_data=f"set_episode_{i}")] for i in range(1, 26)]
     buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
     return InlineKeyboardMarkup(buttons)
 
 # Function to generate language buttons
 def get_language_buttons():
     languages = ["Tamil", "English", "Japanese", "Hindi", "Malayalam", "Kannada", "Telugu", "EngSub", "Multi"]
-    buttons = [[InlineKeyboardButton(lang, callback_data=f"language_{lang}")] for lang in languages]
+    buttons = [[InlineKeyboardButton(lang, callback_data=f"set_language_{lang}")] for lang in languages]
     buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
     return InlineKeyboardMarkup(buttons)
 
 # Function to generate quality buttons
 def get_quality_buttons():
     qualities = ["480p", "720p", "1080p", "2K", "4K"]
-    buttons = [[InlineKeyboardButton(quality, callback_data=f"quality_{quality}")] for quality in qualities]
+    buttons = [[InlineKeyboardButton(quality, callback_data=f"set_quality_{quality}")] for quality in qualities]
     buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
     return InlineKeyboardMarkup(buttons)
 
@@ -102,14 +102,14 @@ async def filter_selection(client, callback_query):
     if data.startswith("set_season_"):
         user_selected_season = int(data.split("_")[2])  # ✅ Now it works correctly
         await callback_query.message.edit_text(f"✅ Selected Season: {user_selected_season}", reply_markup=get_filter_buttons())
-    elif data.startswith("episode_"):
-        user_selected_episode = int(data.split("_")[1])
+    elif data.startswith("set_episode_"):
+        user_selected_episode = int(data.split("_")[2])
         await callback_query.message.edit_text(f"✅ Selected Episode: {user_selected_episode}", reply_markup=get_filter_buttons())
-    elif data.startswith("language_"):
-        user_selected_language = data.split("_")[1]
+    elif data.startswith("set_language_"):
+        user_selected_language = data.split("_")[2]
         await callback_query.message.edit_text(f"✅ Selected Language: {user_selected_language}", reply_markup=get_filter_buttons())
-    elif data.startswith("quality_"):
-        user_selected_quality = data.split("_")[1]
+    elif data.startswith("set_quality_"):
+        user_selected_quality = data.split("_")[2]
         await callback_query.message.edit_text(f"✅ Selected Quality: {user_selected_quality}", reply_markup=get_filter_buttons())
 
 #-------------------remaining codes down on this----------
