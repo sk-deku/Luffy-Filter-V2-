@@ -71,7 +71,7 @@ async def filter_callback(client, callback_query):
 
 # Function to generate season buttons
 def get_season_buttons():
-    buttons = [[InlineKeyboardButton(f"Season {i}", callback_data=f"season_{i}")] for i in range(1, 21)]
+    buttons = [[InlineKeyboardButton(f"Season {i}", callback_data=f"set_season_{i}")] for i in range(1, 21)]
     buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
     return InlineKeyboardMarkup(buttons)
 
