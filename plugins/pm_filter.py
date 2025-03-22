@@ -30,6 +30,92 @@ BUTTONS = {}
 SPELL_CHECK = {}
 
 
+#---------------------code up on this------------------
+
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+# Function to generate filter buttons
+def get_filter_buttons():
+    buttons = [
+        [InlineKeyboardButton("Seasons 📺", callback_data="filter_season"),
+         InlineKeyboardButton("Episodes 🎬", callback_data="filter_episode")],
+        [InlineKeyboardButton("Languages 🌍", callback_data="filter_language"),
+         InlineKeyboardButton("Quality 🎥", callback_data="filter_quality")],
+        [InlineKeyboardButton("Clear Filters ❌", callback_data="clear_filters")]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+# Function to handle the callback queries for filter selection
+@app.on_callback_query()
+async def filter_callback(client, callback_query):
+    data = callback_query.data
+
+    if data == "filter_season":
+        await callback_query.message.edit_text("Select a Season:", reply_markup=get_season_buttons())
+    elif data == "filter_episode":
+        await callback_query.message.edit_text("Select an Episode:", reply_markup=get_episode_buttons())
+    elif data == "filter_language":
+        await callback_query.message.edit_text("Select a Language:", reply_markup=get_language_buttons())
+    elif data == "filter_quality":
+        await callback_query.message.edit_text("Select a Quality:", reply_markup=get_quality_buttons())
+    elif data == "clear_filters":
+        global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality
+        user_selected_season = None
+        user_selected_episode = None
+        user_selected_language = None
+        user_selected_quality = None
+        await callback_query.message.edit_text("Filters cleared!", reply_markup=get_filter_buttons())
+
+# Function to generate season buttons
+def get_season_buttons():
+    buttons = [[InlineKeyboardButton(f"Season {i}", callback_data=f"season_{i}")] for i in range(1, 21)]
+    buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
+    return InlineKeyboardMarkup(buttons)
+
+# Function to generate episode buttons
+def get_episode_buttons():
+    buttons = [[InlineKeyboardButton(f"Episode {i}", callback_data=f"episode_{i}")] for i in range(1, 26)]
+    buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
+    return InlineKeyboardMarkup(buttons)
+
+# Function to generate language buttons
+def get_language_buttons():
+    languages = ["Tamil", "English", "Japanese", "Hindi", "Malayalam", "Kannada", "Telugu", "EngSub", "Multi"]
+    buttons = [[InlineKeyboardButton(lang, callback_data=f"language_{lang}")] for lang in languages]
+    buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
+    return InlineKeyboardMarkup(buttons)
+
+# Function to generate quality buttons
+def get_quality_buttons():
+    qualities = ["480p", "720p", "1080p", "2K", "4K"]
+    buttons = [[InlineKeyboardButton(quality, callback_data=f"quality_{quality}")] for quality in qualities]
+    buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
+    return InlineKeyboardMarkup(buttons)
+
+# Handle selection of filters
+@app.on_callback_query()
+async def filter_selection(client, callback_query):
+    global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality
+
+    data = callback_query.data
+    if data.startswith("season_"):
+        user_selected_season = int(data.split("_")[1])
+        await callback_query.message.edit_text(f"Selected Season: {user_selected_season}", reply_markup=get_filter_buttons())
+    elif data.startswith("episode_"):
+        user_selected_episode = int(data.split("_")[1])
+        await callback_query.message.edit_text(f"Selected Episode: {user_selected_episode}", reply_markup=get_filter_buttons())
+    elif data.startswith("language_"):
+        user_selected_language = data.split("_")[1]
+        await callback_query.message.edit_text(f"Selected Language: {user_selected_language}", reply_markup=get_filter_buttons())
+    elif data.startswith("quality_"):
+        user_selected_quality = data.split("_")[1]
+        await callback_query.message.edit_text(f"Selected Quality: {user_selected_quality}", reply_markup=get_filter_buttons())
+
+#-------------------remaining codes down on this----------
+
+
+
+
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def give_filter(client, message):
     k = await manual_filters(client, message)
