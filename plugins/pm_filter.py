@@ -96,7 +96,7 @@ def get_quality_buttons():
     return InlineKeyboardMarkup(buttons)
 
 # Handle selection of filters
-@app.on_callback_query()
+@app.on_callback_query(filters.group | filters.private)
 async def filter_selection(client, callback_query):
     global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality
 
