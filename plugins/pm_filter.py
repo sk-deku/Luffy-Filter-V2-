@@ -49,7 +49,7 @@ def get_filter_buttons():
     return InlineKeyboardMarkup(buttons)
 
 # Function to handle the callback queries for filter selection
-@app.on_callback_query()
+@app.on_callback_query(filters.group | filters.private)
 async def filter_callback(client, callback_query):
     data = callback_query.data
 
