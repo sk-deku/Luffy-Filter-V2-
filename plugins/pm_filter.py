@@ -32,7 +32,10 @@ SPELL_CHECK = {}
 
 #---------------------code up on this------------------
 
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+# Ensure 'app' is properly defined
+app = Client("bot")
+
+#-----------------------------
 
 # Function to generate filter buttons
 def get_filter_buttons():
