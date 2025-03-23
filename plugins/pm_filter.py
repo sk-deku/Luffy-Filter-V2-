@@ -161,7 +161,7 @@ async def restore_results(client, query):
     # ✅ Fetch user's current filters before restoring results
     filters = user_filters.get(user_id, {})
 
-    await send_search_results(query.message.chat.id, anime_name, filters)
+    await auto_filter(query.message.chat.id, anime_name, filters)
     await query.answer("Restored previous results!")
 
 
@@ -180,7 +180,7 @@ async def apply_filter(client, query):
     user_filters[user_id][filter_type] = selected_value
 
     # ✅ Fetch updated results with new filters
-    await send_search_results(query.message.chat.id, anime_name, user_filters[user_id])
+    await auto_filter(query.message.chat.id, anime_name, user_filters[user_id])
 
     # ✅ Ensure pagination buttons still appear
     await query.answer(f"Filtered by {filter_type.capitalize()}: {selected_value}")
@@ -196,7 +196,7 @@ async def clear_filters(client, query):
     user_filters[user_id] = {}
 
     # ✅ Fetch full results again
-    await send_search_results(query.message.chat.id, anime_name)
+    await auto_filter(query.message.chat.id, anime_name)
 
     await query.answer("All filters cleared! Restoring full results.", show_alert=True)
 
