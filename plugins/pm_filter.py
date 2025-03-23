@@ -83,6 +83,14 @@ async def next_page(bot, query):
             for file in files
         ]
 
+# Filter Buttons (Always Appear Above Search Results)
+filter_buttons = [
+    [InlineKeyboardButton("🗂 Season", callback_data=f"filter_season_{search}")],
+    [InlineKeyboardButton("🌎 Language", callback_data=f"filter_language_{search}")],
+    [InlineKeyboardButton("📺 Quality", callback_data=f"filter_quality_{search}")],
+    [InlineKeyboardButton("❌ Clear Filters", callback_data=f"clear_filters_{search}")]
+]
+
     if 0 < offset <= 10:
         off_set = 0
     elif offset == 0:
@@ -107,6 +115,10 @@ async def next_page(bot, query):
                 InlineKeyboardButton("NEXT ⏩", callback_data=f"next_{req}_{key}_{n_offset}")
             ],
         )
+
+# Merge Filter and Pagination Buttons
+buttons = filter_buttons + btn + pagination_buttons
+
     try:
         await query.edit_message_reply_markup(
             reply_markup=InlineKeyboardMarkup(btn)
