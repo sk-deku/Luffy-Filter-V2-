@@ -30,14 +30,6 @@ BUTTONS = {}
 SPELL_CHECK = {}
 
 
-filter_buttons = [
-    [InlineKeyboardButton("🗂 Season", callback_data=f"filter_season_{query}")],
-    [InlineKeyboardButton("🌎 Language", callback_data=f"filter_language_{query}")],
-    [InlineKeyboardButton("📺 Quality", callback_data=f"filter_quality_{query}")],
-    [InlineKeyboardButton("❌ Clear All Filters", callback_data=f"clear_filters_{query}")]
-]
-
-
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def give_filter(client, message):
     k = await manual_filters(client, message)
