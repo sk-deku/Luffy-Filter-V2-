@@ -192,13 +192,13 @@ async def clear_filters(client, query):
     anime_name = query.matches[0].group(1)
     user_id = query.from_user.id
 
-    # Reset filters for this user
+    # ✅ Reset all filters for this user
     user_filters[user_id] = {}
 
-    # Fetch full results again
+    # ✅ Fetch full results again
     await send_search_results(query.message.chat.id, anime_name)
 
-    await query.answer("All filters cleared!", show_alert=True)
+    await query.answer("All filters cleared! Restoring full results.", show_alert=True)
 
 
 
