@@ -650,6 +650,10 @@ def get_quality_buttons():
     buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
     return InlineKeyboardMarkup(buttons)
 
+@app.on_callback_query(filters.regex(r"^back_to_filters$"))
+async def back_to_filters(client, callback_query):
+    await callback_query.message.edit_text("🔽 **Choose a filter option:**", reply_markup=get_filter_buttons())
+
 @app.on_callback_query(filters.regex(r"^set_(season|episode|language|quality)_(.+)"))
 async def set_filter(client, callback_query):
     user_id = callback_query.from_user.id
