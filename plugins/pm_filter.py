@@ -28,10 +28,77 @@ logger.setLevel(logging.ERROR)
 
 BUTTONS = {}
 SPELL_CHECK = {}
-USER_FILTERS = {}  # Dictionary to store user-selected filters per user
+
+
+#---------------------code up on this------------------
 
 # Ensure 'app' is properly defined
 app = Client("bot")
+
+#-----------------------------
+
+# Function to generate filter buttons
+def get_filter_buttons():
+    buttons = [
+        [InlineKeyboardButton("Seasons 📺", callback_data="filter_season"),
+         InlineKeyboardButton("Episodes 🎬", callback_data="filter_episode")],
+        [InlineKeyboardButton("Languages 🌍", callback_data="filter_language"),
+         InlineKeyboardButton("Quality 🎥", callback_data="filter_quality")],
+        [InlineKeyboardButton("Clear Filters ❌", callback_data="clear_filters")]
+    ]
+    return InlineKeyboardMarkup(buttons)
+
+# Function to generate season buttons
+def get_season_buttons():
+    buttons = [[InlineKeyboardButton(f"Season {i}", callback_data=f"set_season_{i}")] for i in range(1, 21)]
+    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
+    return InlineKeyboardMarkup(buttons)
+
+# Function to generate episode buttons
+def get_episode_buttons():
+    buttons = [[InlineKeyboardButton(f"Episode {i}", callback_data=f"set_episode_{i}")] for i in range(1, 26)]
+    buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
+    return InlineKeyboardMarkup(buttons)
+
+# Function to generate language buttons
+def get_language_buttons():
+    languages = ["Tamil", "English", "Japanese", "Hindi", "Malayalam", "Kannada", "Telugu", "EngSub", "Multi"]
+    buttons = [[InlineKeyboardButton(lang, callback_data=f"set_language_{lang}")] for lang in languages]
+    buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
+    return InlineKeyboardMarkup(buttons)
+
+# Function to generate quality buttons
+def get_quality_buttons():
+    qualities = ["480p", "720p", "1080p", "2K", "4K"]
+    buttons = [[InlineKeyboardButton(quality, callback_data=f"set_quality_{quality}")] for quality in qualities]
+    buttons.append([InlineKeyboardButton("Back 🔙", callback_data="back")])
+    return InlineKeyboardMarkup(buttons)
+
+@app.on_callback_query(filters.regex(r"^filter_(season|episode|language|quality)$"))
+async def filter_callback(client, callback_query):
+    data = callback_query.data
+
+    if data == "filter_season":
+        await callback_query.message.edit_text("📺 **Select a Season:**", reply_markup=get_season_buttons())
+    elif data == "filter_episode":
+        await callback_query.message.edit_text("🎬 **Select an Episode:**", reply_markup=get_episode_buttons())
+    elif data == "filter_language":
+        await callback_query.message.edit_text("🌍 **Select a Language:**", reply_markup=get_language_buttons())
+    elif data == "filter_quality":
+        await callback_query.message.edit_text("🎥 **Select a Quality:**", reply_markup=get_quality_buttons())
+    elif data == "clear_filters":
+        global user_selected_season, user_selected_episode, user_selected_language, user_selected_quality
+        user_selected_season = None
+        user_selected_episode = None
+        user_selected_language = None
+        user_selected_quality = None
+        await callback_query.message.edit_text("✅ Filters cleared!", reply_markup=get_filter_buttons())
+
+
+#-------------------remaining codes down on this----------
+
+
+
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def give_filter(client, message):
@@ -617,108 +684,17 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.edit_reply_markup(reply_markup)
     await query.answer('Piracy Is Crime')
 
-#------------------------------------filterings----------------------------------------------------------------
-
-# Function to generate filter buttons
-def get_filter_buttons():
-    buttons = [
-        [InlineKeyboardButton("Seasons 🎧", callback_data="filter_season"),
-         InlineKeyboardButton("Episodes 🎮", callback_data="filter_episode")],
-        [InlineKeyboardButton("Languages 🌍", callback_data="filter_language"),
-         InlineKeyboardButton("Quality 🎥", callback_data="filter_quality")],
-        [InlineKeyboardButton("Clear Filters ❌", callback_data="clear_filters")]
-    ]
-    return InlineKeyboardMarkup(buttons)
-
-def get_season_buttons():
-    buttons = [[InlineKeyboardButton(f"S{str(i).zfill(2)}", callback_data=f"set_season_S{str(i).zfill(2)}")] for i in range(1, 21)]
-    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
-    return InlineKeyboardMarkup(buttons)
-
-def get_episode_buttons():
-    buttons = [[InlineKeyboardButton(f"EP{str(i).zfill(2)}", callback_data=f"set_episode_EP{str(i).zfill(2)}")] for i in range(1, 26)]
-    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
-    return InlineKeyboardMarkup(buttons)
-
-def get_language_buttons():
-    languages = ["Tamil", "English", "Japanese", "Hindi", "Malayalam", "Kannada", "Telugu", "EngSub", "Multi"]
-    buttons = [[InlineKeyboardButton(lang, callback_data=f"set_language_{lang}")] for lang in languages]
-    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
-    return InlineKeyboardMarkup(buttons)
-
-def get_quality_buttons():
-    qualities = ["480p", "720p", "1080p", "2K", "4K"]
-    buttons = [[InlineKeyboardButton(quality, callback_data=f"set_quality_{quality}")] for quality in qualities]
-    buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
-    return InlineKeyboardMarkup(buttons)
-
-@app.on_callback_query(filters.regex(r"^set_(season|episode|language|quality)_S?(EP)?(.+)$"))
-async def set_filter(client, callback_query):
-    user_id = callback_query.from_user.id
-    filter_type, value = callback_query.data.split("_", 2)[1:]  # Extract type and value
-
-    if user_id not in USER_FILTERS:
-        USER_FILTERS[user_id] = {"season": None, "episode": None, "language": None, "quality": None}
-    
-    USER_FILTERS[user_id][filter_type] = value
-
-    await callback_query.answer(f"Selected {filter_type.upper()}: {value}", show_alert=True)
-    await callback_query.message.edit_text("✅ Filter updated!", reply_markup=get_filter_buttons())
-
-@app.on_callback_query(filters.regex(r"^filter_(season|episode|language|quality)$"))
-async def filter_callback(client, callback_query):
-    data = callback_query.data
-
-    if data == "filter_season":
-        await callback_query.message.edit_text("📺 **Select a Season:**", reply_markup=get_season_buttons())
-    elif data == "filter_episode":
-        await callback_query.message.edit_text("🎬 **Select an Episode:**", reply_markup=get_episode_buttons())
-    elif data == "filter_language":
-        await callback_query.message.edit_text("🌍 **Select a Language:**", reply_markup=get_language_buttons())
-    elif data == "filter_quality":
-        await callback_query.message.edit_text("🎥 **Select a Quality:**", reply_markup=get_quality_buttons())
-
-@app.on_callback_query(filters.regex(r"^back_to_filters$"))
-async def back_to_filters(client, callback_query):
-    await callback_query.message.edit_text("🔽 **Choose a filter option:**", reply_markup=get_filter_buttons())
-
-@app.on_callback_query(filters.regex(r"^clear_filters$"))
-async def clear_filters(client, callback_query):
-    user_id = callback_query.from_user.id
-    if user_id in USER_FILTERS:
-        USER_FILTERS[user_id] = {"season": None, "episode": None, "language": None, "quality": None}
-    
-    await callback_query.answer("Filters cleared!", show_alert=True)
-    await callback_query.message.edit_text("✅ Filters cleared!", reply_markup=get_filter_buttons())
 
 async def auto_filter(client, msg, spoll=False):
-    user_id = msg.from_user.id if msg.from_user else 0
-    user_filters = USER_FILTERS.get(user_id, {})
-    selected_season = user_filters.get("season")
-    selected_episode = user_filters.get("episode")
-    selected_language = user_filters.get("language")
-    selected_quality = user_filters.get("quality")
-
     if not spoll:
         message = msg
         settings = await get_settings(message.chat.id)
-        if message.text.startswith("/"): return
-        if re.findall("((^\/|^,|^!|^\\.|^[\U0001F600-\U000E007F]).*)", message.text):
+        if message.text.startswith("/"): return  # ignore commands
+        if re.findall("((^\/|^,|^!|^\.|^[\U0001F600-\U000E007F]).*)", message.text):
             return
         if 2 < len(message.text) < 100:
             search = message.text
             files, offset, total_results = await get_search_results(search.lower(), offset=0)
-
-            if files:
-                if selected_season:
-                    files = [f for f in files if f.file_name.lower().find(selected_season.lower()) != -1]
-                if selected_episode:
-                    files = [f for f in files if f.file_name.lower().find(selected_episode.lower()) != -1]
-                if selected_language:
-                    files = [f for f in files if f.file_name.lower().find(selected_language.lower()) != -1]
-                if selected_quality:
-                    files = [f for f in files if f.file_name.lower().find(selected_quality.lower()) != -1]
-
             if not files:
                 if settings["spell_check"]:
                     return await advantage_spell_chok(msg)
@@ -726,12 +702,10 @@ async def auto_filter(client, msg, spoll=False):
                     return
         else:
             return
-
     else:
         settings = await get_settings(msg.message.chat.id)
         message = msg.message.reply_to_message  # msg will be callback query
         search, files, offset, total_results = spoll
-
     pre = 'filep' if settings['file_secure'] else 'file'
     if settings["button"]:
         btn = [
@@ -769,8 +743,6 @@ async def auto_filter(client, msg, spoll=False):
         btn.append(
             [InlineKeyboardButton(text="🗓 1/1", callback_data="pages")]
         )
-#---------------------------------------------------------------------------------------------------------------
-
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
     TEMPLATE = settings['template']
     if imdb:
@@ -817,9 +789,17 @@ async def auto_filter(client, msg, spoll=False):
             await message.reply_photo(photo=poster, caption=cap[:1024], reply_markup=InlineKeyboardMarkup(btn))
         except Exception as e:
             logger.exception(e)
-            await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+            buttons = get_filter_buttons()  # Get filtering buttons
+            btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
+#           await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
     else:
-        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+        buttons = get_filter_buttons()  # Get filtering buttons
+        btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
+# Send the message with filtering buttons on top
+        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(buttons.inline_keyboard + btn))
+#-----811-----------------------------------------------------------------------------------------------------------
+#        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+#----------------------------------------------------------------------------------------------------------------
 
     if spoll:
         await msg.message.delete()
@@ -834,7 +814,7 @@ async def advantage_spell_chok(msg):
     g_s += await search_gagala(msg.text)
     gs_parsed = []
     if not g_s:
-        k = await msg.reply("I couldn't find any ANIME in that name.")
+        k = await msg.reply("I couldn't find any movie in that name.")
         await asyncio.sleep(8)
         await k.delete()
         return
