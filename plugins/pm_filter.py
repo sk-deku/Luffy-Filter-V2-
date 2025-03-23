@@ -133,6 +133,7 @@ async def next_page(bot, query):
 async def show_filter_options(client, query):
     filter_type = query.matches[0].group(1)  # "season", "language", or "quality"
     anime_name = query.matches[0].group(2)
+    user_id = query.from_user.id  # Identify user
 
     # Define selection options
     if filter_type == "season":
@@ -146,10 +147,23 @@ async def show_filter_options(client, query):
     buttons = [[InlineKeyboardButton(opt, callback_data=f"apply_{filter_type}_{opt}_{anime_name}")]
                for opt in options]
 
-    # Add a back button
-    buttons.append([InlineKeyboardButton("🔙 Back to Results", callback_data=f"back_{anime_name}")])
+    # ✅ **Fix: Back Button Restores Previous Results**
+    buttons.append([InlineKeyboardButton("🔙 Back to Results", callback_data=f"restore_results_{anime_name}")])
 
     await query.message.edit_text(f"Select a {filter_type.capitalize()}:", reply_markup=InlineKeyboardMarkup(buttons))
+
+# ✅ Add Function to Restore Search Results when "Back" is Clicked
+@Client.on_callback_query(filters.regex(r"restore_results_(.+)"))
+async def restore_results(client, query):
+    anime_name = query.matches[0].group(1)
+    user_id = query.from_user.id
+
+    # ✅ Fetch user's current filters before restoring results
+    filters = user_filters.get(user_id, {})
+
+    await send_search_results(query.message.chat.id, anime_name, filters)
+    await query.answer("Restored previous results!")
+
 
 @Client.on_callback_query(filters.regex(r"apply_(season|language|quality)_(.+)_(.+)"))
 async def apply_filter(client, query):
