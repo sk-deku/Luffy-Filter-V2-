@@ -617,6 +617,8 @@ async def cb_handler(client: Client, query: CallbackQuery):
             await query.message.edit_reply_markup(reply_markup)
     await query.answer('Piracy Is Crime')
 
+#------------------------------------filterings----------------------------------------------------------------
+
 # Function to generate filter buttons
 def get_filter_buttons():
     buttons = [
@@ -650,14 +652,10 @@ def get_quality_buttons():
     buttons.append([InlineKeyboardButton("⬅️ Back", callback_data="back_to_filters")])
     return InlineKeyboardMarkup(buttons)
 
-@app.on_callback_query(filters.regex(r"^back_to_filters$"))
-async def back_to_filters(client, callback_query):
-    await callback_query.message.edit_text("🔽 **Choose a filter option:**", reply_markup=get_filter_buttons())
-
-@app.on_callback_query(filters.regex(r"^set_(season|episode|language|quality)_(.+)"))
+@app.on_callback_query(filters.regex(r"^set_(season|episode|language|quality)_S?(EP)?(.+)$"))
 async def set_filter(client, callback_query):
     user_id = callback_query.from_user.id
-    filter_type, value = callback_query.data.split("_")[1], callback_query.data.split("_")[2]
+    filter_type, value = callback_query.data.split("_", 2)[1:]  # Extract type and value
 
     if user_id not in USER_FILTERS:
         USER_FILTERS[user_id] = {"season": None, "episode": None, "language": None, "quality": None}
@@ -679,6 +677,10 @@ async def filter_callback(client, callback_query):
         await callback_query.message.edit_text("🌍 **Select a Language:**", reply_markup=get_language_buttons())
     elif data == "filter_quality":
         await callback_query.message.edit_text("🎥 **Select a Quality:**", reply_markup=get_quality_buttons())
+
+@app.on_callback_query(filters.regex(r"^back_to_filters$"))
+async def back_to_filters(client, callback_query):
+    await callback_query.message.edit_text("🔽 **Choose a filter option:**", reply_markup=get_filter_buttons())
 
 @app.on_callback_query(filters.regex(r"^clear_filters$"))
 async def clear_filters(client, callback_query):
@@ -767,6 +769,8 @@ async def auto_filter(client, msg, spoll=False):
         btn.append(
             [InlineKeyboardButton(text="🗓 1/1", callback_data="pages")]
         )
+#---------------------------------------------------------------------------------------------------------------
+
     imdb = await get_poster(search, file=(files[0]).file_name) if settings["imdb"] else None
     TEMPLATE = settings['template']
     if imdb:
@@ -813,17 +817,9 @@ async def auto_filter(client, msg, spoll=False):
             await message.reply_photo(photo=poster, caption=cap[:1024], reply_markup=InlineKeyboardMarkup(btn))
         except Exception as e:
             logger.exception(e)
-            buttons = get_filter_buttons()  # Get filtering buttons
-            btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
-#           await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
+            await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
     else:
-        buttons = get_filter_buttons()  # Get filtering buttons
-        btn.append([InlineKeyboardButton("🔄 Refresh Filters", callback_data="refresh_filters")])  # Add a refresh button
-# Send the message with filtering buttons on top
-        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(buttons.inline_keyboard + btn))
-#-----811-----------------------------------------------------------------------------------------------------------
-#        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
-#----------------------------------------------------------------------------------------------------------------
+        await message.reply_text(cap, reply_markup=InlineKeyboardMarkup(btn))
 
     if spoll:
         await msg.message.delete()
