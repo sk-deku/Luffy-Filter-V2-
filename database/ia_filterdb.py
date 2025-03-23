@@ -64,81 +64,60 @@ async def save_file(media):
             logger.info(f'{getattr(media, "file_name", "NO_FILE")} is saved to database')
             return True, 1
 
-#-----------------------------------------------------------------------------------------------
-async def get_search_results(query, offset=0, max_results=10, file_type=None, 
-                             season=None, episode=None, language=None, quality=None):
+
+async def get_search_results(query, file_type=None, max_results=10, offset=0, filter=False, season=None, episode=None, language=None, quality=None):
+    """For given query return (results, next_offset)"""
+
     query = query.strip()
-    raw_pattern = r'(\b|[\.+\-_])' + query + r'(\b|[\.+\-_])' if " " not in query else query.replace(' ', r'.*[\s.+-_]')
-    regex = {"$regex": raw_pattern, "$options": "i"}
-
-    filter = {"$or": [{"file_name": regex}, {"caption": regex}]} if USE_CAPTION_FILTER else {"file_name": regex}
     
+    if filter:
+        query = query.replace(' ', r'(\s|\.|\+|\-|_)')
+        raw_pattern = r'(\s|_|\-|\.|\+)' + query + r'(\s|_|\-|\.|\+)'
+    elif not query:
+        raw_pattern = '.'
+    elif ' ' not in query:
+        raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
+    else:
+        raw_pattern = query.replace(' ', r'.*[\s\.\+\-_]')
+
+    try:
+        regex = re.compile(raw_pattern, flags=re.IGNORECASE)
+    except:
+        return []
+
+    # **Base query: Search by file name**
+    filter_query = {'file_name': regex}
+
+    # **Apply caption filter if enabled**
+    if USE_CAPTION_FILTER:
+        filter_query = {'$or': [{'file_name': regex}, {'caption': regex}]}
+
+    # **Apply additional filters**
     if file_type:
-        filter["file_type"] = file_type
+        filter_query['file_type'] = file_type  # Match specific file types
     
-    # **Apply New Filters (Only if Provided)**
     if season:
-        filter["file_name"] = {"$regex": fr"(\b|_|\s)S{season:02d}(\b|_|\s)", "$options": "i"}
-    if episode:
-        filter["file_name"] = {"$regex": fr"(\b|_|\s)E{episode:02d}(\b|_|\s)", "$options": "i"}
-    if language:
-        filter["file_name"] = {"$regex": fr"(\b|_|\s)({language})(\b|_|\s)", "$options": "i"}
-    if quality:
-        filter["file_name"] = {"$regex": fr"(\b|_|\s)({quality})(\b|_|\s)", "$options": "i"}
+        filter_query["file_name"] = {"$regex": fr"S{season:02d}", "$options": "i"}  # Match "S01", "S02", etc.
 
-    total_results = await Media.count_documents(filter)
-    cursor = Media.find(filter).sort("$natural", -1).skip(offset).limit(max_results)
+    if episode:
+        filter_query["file_name"] = {"$regex": fr"E{episode:02d}", "$options": "i"}  # Match "E01", "E02", etc.
+
+    if language:
+        filter_query["file_name"] = {"$regex": fr"\b{language}\b", "$options": "i"}  # Match exact language name
+
+    if quality:
+        filter_query["file_name"] = {"$regex": fr"\b{quality}\b", "$options": "i"}  # Match exact quality (480p, 720p, etc.)
+
+    # **Count matching documents**
+    total_results = await Media.count_documents(filter_query)
+    next_offset = offset + max_results if total_results > offset + max_results else ''
+
+    # **Retrieve matching files from MongoDB**
+    cursor = Media.find(filter_query).sort('$natural', -1).skip(offset).limit(max_results)
     files = await cursor.to_list(length=max_results)
 
-    return files, offset + max_results if total_results > offset + max_results else None, total_results
+    return files, next_offset, total_results
 
-
-
-#async def get_search_results(query, file_type=None, max_results=10, offset=0, filter=False):
-#    """For given query return (results, next_offset)"""
-#
-#    query = query.strip()
-    #if filter:
-        #better ?
-        #query = query.replace(' ', r'(\s|\.|\+|\-|_)')
-        #raw_pattern = r'(\s|_|\-|\.|\+)' + query + r'(\s|_|\-|\.|\+)'
-#    if not query:
-#        raw_pattern = '.'
-#    elif ' ' not in query:
-#        raw_pattern = r'(\b|[\.\+\-_])' + query + r'(\b|[\.\+\-_])'
-#    else:
-#        raw_pattern = query.replace(' ', r'.*[\s\.\+\-_]')
-    
-#    try:
-#        regex = re.compile(raw_pattern, flags=re.IGNORECASE)
-#    except:
-#        return []
-
-#    if USE_CAPTION_FILTER:
-#        filter = {'$or': [{'file_name': regex}, {'caption': regex}]}
-#    else:
-#        filter = {'file_name': regex}
-
-#    if file_type:
-#        filter['file_type'] = file_type
-
-#    total_results = await Media.count_documents(filter)
-#    next_offset = offset + max_results
-
-#    if next_offset > total_results:
-#        next_offset = ''
-
-#    cursor = Media.find(filter)
-    # Sort by recent
-#    cursor.sort('$natural', -1)
-    # Slice files according to offset and max results
-#    cursor.skip(offset).limit(max_results)
-    # Get list of files
-#    files = await cursor.to_list(length=max_results)
-
-#    return files, next_offset, total_results
-
-#-------------------------------------------------------------------------------------------------
 
 async def get_file_details(query):
     filter = {'file_id': query}
