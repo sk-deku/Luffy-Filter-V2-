@@ -51,7 +51,12 @@ async def next_page(bot, query):
         await query.answer("You are using one of my old messages, please send the request again.", show_alert=True)
         return
 
-    files, n_offset, total = await get_search_results(search, offset=offset)
+    # Retrieve user's applied filters
+    filters = user_filters.get(query.from_user.id, {})
+
+    # Fetch search results with filters
+    files, n_offset, total = await get_search_results(search, offset=offset, **filters)
+
     try:
         n_offset = int(n_offset)
     except:
@@ -60,6 +65,7 @@ async def next_page(bot, query):
     if not files:
         return
     settings = await get_settings(query.message.chat.id)
+    
     if settings['button']:
         btn = [
             [
@@ -83,45 +89,40 @@ async def next_page(bot, query):
             for file in files
         ]
 
-# Filter Buttons (Always Appear Above Search Results)
-filter_buttons = [
-    [InlineKeyboardButton("🗂 Season", callback_data=f"filter_season_{search}")],
-    [InlineKeyboardButton("🌎 Language", callback_data=f"filter_language_{search}")],
-    [InlineKeyboardButton("📺 Quality", callback_data=f"filter_quality_{search}")],
-    [InlineKeyboardButton("❌ Clear Filters", callback_data=f"clear_filters_{search}")]
-]
-
-    if 0 < offset <= 10:
-        off_set = 0
-    elif offset == 0:
-        off_set = None
-    else:
-        off_set = offset - 10
+    # Pagination Buttons
     if n_offset == 0:
-        btn.append(
-            [InlineKeyboardButton("⏪ BACK", callback_data=f"next_{req}_{key}_{off_set}"),
+        pagination_buttons = [
+            [InlineKeyboardButton("⏪ BACK", callback_data=f"next_{req}_{key}_{offset - 10}"),
              InlineKeyboardButton(f"📃 Pages {math.ceil(int(offset) / 10) + 1} / {math.ceil(total / 10)}",
                                   callback_data="pages")]
-        )
-    elif off_set is None:
-        btn.append(
+        ]
+    elif offset == 0:
+        pagination_buttons = [
             [InlineKeyboardButton(f"🗓 {math.ceil(int(offset) / 10) + 1} / {math.ceil(total / 10)}", callback_data="pages"),
-             InlineKeyboardButton("NEXT ⏩", callback_data=f"next_{req}_{key}_{n_offset}")])
+             InlineKeyboardButton("NEXT ⏩", callback_data=f"next_{req}_{key}_{n_offset}")]
+        ]
     else:
-        btn.append(
+        pagination_buttons = [
             [
-                InlineKeyboardButton("⏪ BACK", callback_data=f"next_{req}_{key}_{off_set}"),
+                InlineKeyboardButton("⏪ BACK", callback_data=f"next_{req}_{key}_{offset - 10}"),
                 InlineKeyboardButton(f"🗓 {math.ceil(int(offset) / 10) + 1} / {math.ceil(total / 10)}", callback_data="pages"),
                 InlineKeyboardButton("NEXT ⏩", callback_data=f"next_{req}_{key}_{n_offset}")
             ],
-        )
+        ]
 
-# Merge Filter and Pagination Buttons
-buttons = filter_buttons + btn + pagination_buttons
+    # Merge Filter and Pagination Buttons
+    filter_buttons = [
+        [InlineKeyboardButton("🗂 Season", callback_data=f"filter_season_{search}")],
+        [InlineKeyboardButton("🌎 Language", callback_data=f"filter_language_{search}")],
+        [InlineKeyboardButton("📺 Quality", callback_data=f"filter_quality_{search}")],
+        [InlineKeyboardButton("❌ Clear Filters", callback_data=f"clear_filters_{search}")]
+    ]
+    
+    buttons = filter_buttons + btn + pagination_buttons
 
     try:
         await query.edit_message_reply_markup(
-            reply_markup=InlineKeyboardMarkup(btn)
+            reply_markup=InlineKeyboardMarkup(buttons)
         )
     except MessageNotModified:
         pass
