@@ -128,6 +128,28 @@ async def next_page(bot, query):
         pass
     await query.answer()
 
+@Client.on_callback_query(filters.regex(r"filter_(season|language|quality)_(.+)"))
+async def show_filter_options(client, query):
+    filter_type = query.matches[0].group(1)  # "season", "language", or "quality"
+    anime_name = query.matches[0].group(2)
+
+    # Define selection options
+    if filter_type == "season":
+        options = [f"S{str(i).zfill(2)}" for i in range(1, 21)]
+    elif filter_type == "language":
+        options = ["English", "Japanese", "Hindi", "Tamil", "Telugu"]
+    elif filter_type == "quality":
+        options = ["480p", "720p", "1080p", "4K"]
+
+    # Create inline buttons (2 per row)
+    buttons = [[InlineKeyboardButton(opt, callback_data=f"apply_{filter_type}_{opt}_{anime_name}")]
+               for opt in options]
+
+    # Add a back button
+    buttons.append([InlineKeyboardButton("🔙 Back to Results", callback_data=f"back_{anime_name}")])
+
+    await query.message.edit_text(f"Select a {filter_type.capitalize()}:", reply_markup=InlineKeyboardMarkup(buttons))
+
 
 @Client.on_callback_query(filters.regex(r"^spolling"))
 async def advantage_spoll_choker(bot, query):
