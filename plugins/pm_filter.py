@@ -28,6 +28,7 @@ logger.setLevel(logging.ERROR)
 
 BUTTONS = {}
 SPELL_CHECK = {}
+user_filters = {}  # Store selected filters per user
 
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
@@ -149,6 +150,40 @@ async def show_filter_options(client, query):
     buttons.append([InlineKeyboardButton("🔙 Back to Results", callback_data=f"back_{anime_name}")])
 
     await query.message.edit_text(f"Select a {filter_type.capitalize()}:", reply_markup=InlineKeyboardMarkup(buttons))
+
+@Client.on_callback_query(filters.regex(r"apply_(season|language|quality)_(.+)_(.+)"))
+async def apply_filter(client, query):
+    filter_type = query.matches[0].group(1)  # season/language/quality
+    selected_value = query.matches[0].group(2)  # Example: S05, English, 720p
+    anime_name = query.matches[0].group(3)
+
+    user_id = query.from_user.id
+
+    # Store the selected filter
+    if user_id not in user_filters:
+        user_filters[user_id] = {}
+
+    user_filters[user_id][filter_type] = selected_value
+
+    # Fetch updated results with new filters
+    await send_search_results(query.message.chat.id, anime_name, user_filters[user_id])
+
+    await query.answer(f"Filtered by {filter_type.capitalize()}: {selected_value}")
+
+
+@Client.on_callback_query(filters.regex(r"clear_filters_(.+)"))
+async def clear_filters(client, query):
+    anime_name = query.matches[0].group(1)
+    user_id = query.from_user.id
+
+    # Reset filters for this user
+    user_filters[user_id] = {}
+
+    # Fetch full results again
+    await send_search_results(query.message.chat.id, anime_name)
+
+    await query.answer("All filters cleared!", show_alert=True)
+
 
 
 @Client.on_callback_query(filters.regex(r"^spolling"))
